@@ -32,7 +32,7 @@ def send_request(name):
                 "game": name,
             },
             headers={
-                "X-Mashape-Key":MASHAPE_KEY,
+                "X-Mashape-Key": MASHAPE_KEY,
                 "Accept": "application/json",
             },
         )
