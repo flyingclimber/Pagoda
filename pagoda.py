@@ -20,8 +20,7 @@ MASHAPE_KEY = CONFIG.get('USER', 'KEY')
 
 def send_request(name):
     '''
-    send_reques - Retrieve game rating
-    # GET https://videogamesrating.p.mashape.com/get.php
+    send_request - Retrieve game rating
     '''
 
     try:
