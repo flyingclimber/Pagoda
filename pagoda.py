@@ -49,5 +49,12 @@ with open(CSV) as csvfile:
     for row in READER:
         game_title = row['Title'].replace('[Game of the Year Edition]', '')
         resp = json.loads(send_request(game_title))
-        print game_title, '{', resp[0]['score'], '}',  '[', row['Console'], ']'
+        if resp:
+            if resp[0]['score']:
+                print game_title, '{', resp[0]['score'], '}',\
+                    '[', row['Console'], ']'
+            else:
+                print "No score found for: ", game_title
+        else:
+            print "Couldn't find: ", game_title
         time.sleep(1)
