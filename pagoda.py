@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
                     if score:
                         print game_title, '{', score, '}',  '[', console, ']'
-                        db.update_score(game_title, score)
+                        db.update_score(game_title, console, score)
                     else:
                         print "No score found for: ", game_title
                 else:

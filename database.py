@@ -21,7 +21,8 @@ def create_db():
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE reviews
-        (id INTEGER PRIMARY KEY, game VARCHAR, ign REAL, meta REAL)''')
+        (id INTEGER PRIMARY KEY, game VARCHAR, console VARCHAR,
+         ign REAL, meta REAL)''')
     cur.execute('''CREATE TABLE updates
         (id INTEGER PRIMARY KEY, status, date DATE)''')
     cur.execute("INSERT INTO updates (status, date) VALUES (?,?)",
@@ -55,11 +56,11 @@ def get_score(title):
     else:
         return res.fetchone()
 
-def update_score(title, ign):
+def update_score(title, console, ign):
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
 
-    cur.execute("INSERT INTO reviews (game, ign) values (?, ?)",
-                (title, ign))
+    cur.execute("INSERT INTO reviews (game, console, ign) values (?, ?, ?)",
+                (title, console, ign))
     conn.commit()
     conn.close()
