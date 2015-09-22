@@ -10,6 +10,7 @@ import json
 import ConfigParser
 import database as db
 import mapping
+import re
 
 CONFIGFILE = '.config'
 CSV = 'Collection-9-21-2015.csv'
@@ -45,6 +46,18 @@ def send_request(name):
     except requests.exceptions.RequestException:
         print('HTTP Request failed')
 
+def cleanup_title(str):
+    '''
+    cleanup_title - Given a string remove all text inside brackets
+    '''
+
+    if str.find('[') == -1 and str.find(']') == -1:
+        res = str
+    else:
+        res = re.sub(r'\[.*?\]', '', str)
+
+    return res
+
 if __name__ == "__main__":
     db.init_db()
 
@@ -54,7 +67,7 @@ if __name__ == "__main__":
             title = row['Title']
             console = row['Console']
 
-            game_title = title.replace('[Game of the Year Edition]', '')
+            game_title = cleanup_title(title)
 
             if not db.get_score(game_title):
                 resp = json.loads(send_request(game_title))
