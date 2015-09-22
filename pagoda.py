@@ -9,10 +9,11 @@ import time
 import json
 import ConfigParser
 import database as db
+import mapping
 
 CONFIGFILE = '.config'
 CSV = 'Collection-9-21-2015.csv'
-MAX_RESULT = 5
+MAX_RESULT = 3
 API_URL = 'https://videogamesrating.p.mashape.com/get.php'
 
 CONFIG = ConfigParser.ConfigParser()
@@ -58,8 +59,19 @@ if __name__ == "__main__":
             if not db.get_score(game_title):
                 resp = json.loads(send_request(game_title))
 
+                found = False
+                score = None
+
                 if resp:
-                    score = resp[0]['score']
+                    for res in resp:
+                        for key, platform in res['platforms'].iteritems():
+                            if mapping.IGN[platform] == console:
+                                score = res['score']
+                                found = True
+                                break
+                        if found == True:
+                            break
+
                     if score:
                         print game_title, '{', score, '}',  '[', console, ']'
                         db.update_score(game_title, score)

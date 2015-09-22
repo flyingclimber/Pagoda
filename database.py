@@ -59,7 +59,7 @@ def update_score(title, ign):
     conn = sqlite3.connect(DB)
     cur = conn.cursor()
 
-    #cur.execute("INSERT INTO reviews (game, ign) values (?, ?)",
-    #            (title, ign))
+    cur.execute("INSERT INTO reviews (game, ign) values (?, ?)",
+                (title, ign))
     conn.commit()
     conn.close()
