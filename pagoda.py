@@ -8,6 +8,7 @@ import requests
 import time
 import json
 import ConfigParser
+import database as db
 
 CONFIGFILE = '.config'
 CSV = 'Collection-9-21-2015.csv'
@@ -36,24 +37,36 @@ def send_request(name):
             },
         )
         '''print('Response HTTP Status Code: {status_code}'.format(
-            status_code = response.status_code))'''
+            status_code = response.status_code))
         print('Response HTTP Response Body: {content}'.format(
-            content = response.content))
+            content = response.content))'''
         return response.content
     except requests.exceptions.RequestException:
         print('HTTP Request failed')
 
-with open(CSV) as csvfile:
-    READER = csv.DictReader(csvfile)
-    for row in READER:
-        game_title = row['Title'].replace('[Game of the Year Edition]', '')
-        resp = json.loads(send_request(game_title))
-        if resp:
-            if resp[0]['score']:
-                print game_title, '{', resp[0]['score'], '}',\
-                    '[', row['Console'], ']'
+if __name__ == "__main__":
+    db.init_db()
+
+    with open(CSV) as csvfile:
+        READER = csv.DictReader(csvfile)
+        for row in READER:
+            title = row['Title']
+            console = row['Console']
+
+            game_title = title.replace('[Game of the Year Edition]', '')
+
+            if not db.get_score(game_title):
+                resp = json.loads(send_request(game_title))
+
+                if resp:
+                    score = resp[0]['score']
+                    if score:
+                        print game_title, '{', score, '}',  '[', console, ']'
+                        db.update_score(game_title, score)
+                    else:
+                        print "No score found for: ", game_title
+                else:
+                    print "Couldn't find: ", game_title
+                time.sleep(1)
             else:
-                print "No score found for: ", game_title
-        else:
-            print "Couldn't find: ", game_title
-        time.sleep(1)
+                print "Skipping ", game_title
