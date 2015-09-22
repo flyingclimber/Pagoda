@@ -11,9 +11,16 @@ import ConfigParser
 import database as db
 import mapping
 import re
+import argparse
+
+PARSER = argparse.ArgumentParser(description='Rank my games')
+PARSER.add_argument('filename', metavar='filename', type=str,
+                    help="csv to read")
+
+ARGS = PARSER.parse_args()
 
 CONFIGFILE = '.config'
-CSV = 'Collection-9-21-2015.csv'
+CSV = ARGS.filename
 MAX_RESULT = 3
 API_URL = 'https://videogamesrating.p.mashape.com/get.php'
 
