@@ -14,13 +14,16 @@ import re
 import argparse
 
 PARSER = argparse.ArgumentParser(description='Rank my games')
-PARSER.add_argument('filename', metavar='filename', type=str,
+PARSER.add_argument('-f', metavar='filename', type=str,
                     help="csv to read")
+PARSER.add_argument('-g', metavar='game_title', type=str,
+                    help="single game lookup")
+PARSER.add_argument('-c', metavar='console', type=str)
+PARSER.add_argument('-d', action="store_true", help="debug")
 
 ARGS = PARSER.parse_args()
 
 CONFIGFILE = '.config'
-CSV = ARGS.filename
 MAX_RESULT = 3
 API_URL = 'https://videogamesrating.p.mashape.com/get.php'
 
@@ -45,10 +48,9 @@ def send_request(name):
                 "Accept": "application/json",
             },
         )
-        '''print('Response HTTP Status Code: {status_code}'.format(
-            status_code = response.status_code))
-        print('Response HTTP Response Body: {content}'.format(
-            content = response.content))'''
+        if ARGS.d:
+            print('Response HTTP Response Body: {content}'.format(
+                content = response.content))
         return response.content
     except requests.exceptions.RequestException:
         print('HTTP Request failed')
@@ -65,40 +67,61 @@ def cleanup_title(str):
 
     return res
 
-if __name__ == "__main__":
-    db.init_db()
+def load_csv():
+    '''
+    load_csv - Load a passed in csv for lookup
+    '''
+
+    CSV = ARGS.f
+    game_list = {}
 
     with open(CSV) as csvfile:
-        READER = csv.DictReader(csvfile)
-        for row in READER:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
             title = row['Title']
             console = row['Console']
 
             game_title = cleanup_title(title)
+            game_list[game_title] = console
 
-            if not db.get_score(game_title):
-                resp = json.loads(send_request(game_title))
+    return game_list
 
-                found = False
-                score = None
+if __name__ == "__main__":
 
-                if resp:
-                    for res in resp:
-                        for key, platform in res['platforms'].iteritems():
-                            if mapping.IGN[platform] == console:
-                                score = res['score']
-                                found = True
-                                break
-                        if found == True:
-                            break
+    db.init_db()
+    games = {}
 
-                    if score:
-                        print game_title, '{', score, '}',  '[', console, ']'
-                        db.update_score(game_title, console, score)
+    if ARGS.g:
+        games[ARGS.g] = ARGS.c
+    else:
+        games = load_csv()
+
+    for game, console in games.iteritems():
+        if not db.get_score(game):
+            resp = json.loads(send_request(game))
+
+            found = False
+            score = None
+
+            if resp:
+                for res in resp:
+                    if not res['score']:
+                        print "No score ", res['title']
+                        continue
                     else:
-                        print "No score found for: ", game_title
-                else:
-                    print "Couldn't find: ", game_title
-                time.sleep(1)
+                        for platform in res['platforms'].itervalues():
+                            for variant in mapping.IGN[platform]:
+                                if variant == console:
+                                    found = True
+                                    break
+                    if found == True:
+                        break
+                if score:
+                    print game, '{', score, '}',  '[', console, ']'
+                    if not ARGS.d:
+                        db.update_score(game, console, score)
             else:
-                print "Skipping ", game_title
+                print "Couldn't find: ", game
+            time.sleep(1)
+        else:
+            print "Skipping ", game
