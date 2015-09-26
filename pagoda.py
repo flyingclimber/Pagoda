@@ -86,6 +86,15 @@ def load_csv():
 
     return game_list
 
+def platform_equal(p1, p2):
+    '''
+    platform_equal - Check mapping table for console variant names
+    '''
+    for variant in mapping.IGN[p1]:
+        if variant == p2:
+            return True
+    return False
+
 if __name__ == "__main__":
 
     db.init_db()
@@ -96,9 +105,9 @@ if __name__ == "__main__":
     else:
         games = load_csv()
 
-    for game, console in games.iteritems():
-        if not db.get_score(game):
-            resp = json.loads(send_request(game))
+    for src_game, src_platform in games.iteritems():
+        if not db.get_score(src_game):
+            resp = json.loads(send_request(src_game))
 
             found = False
             score = None
@@ -109,19 +118,19 @@ if __name__ == "__main__":
                         print "No score ", res['title']
                         continue
                     else:
-                        for platform in res['platforms'].itervalues():
-                            for variant in mapping.IGN[platform]:
-                                if variant == console:
-                                    found = True
-                                    break
+                        for res_platform in res['platforms'].itervalues():
+                            if platform_equal(res_platform, src_platform):
+                                score = res['score']
+                                found = True
+                                break
                     if found == True:
                         break
                 if score:
-                    print game, '{', score, '}',  '[', console, ']'
+                    print src_game, '{', score, '}',  '[', src_platform, ']'
                     if not ARGS.d:
-                        db.update_score(game, console, score)
+                        db.update_score(src_game, src_platform, score)
             else:
-                print "Couldn't find: ", game
+                print "Couldn't find: ", src_game
             time.sleep(1)
         else:
-            print "Skipping ", game
+            print "Skipping ", src_game
