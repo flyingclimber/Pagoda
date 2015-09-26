@@ -22,7 +22,7 @@ def create_db():
 
     cur.execute('''CREATE TABLE reviews
         (id INTEGER PRIMARY KEY, game VARCHAR, console VARCHAR,
-         ign REAL, meta REAL)''')
+         ign REAL, meta REAL, beaten BOOLEAN)''')
     cur.execute('''CREATE TABLE updates
         (id INTEGER PRIMARY KEY, status, date DATE)''')
     cur.execute("INSERT INTO updates (status, date) VALUES (?,?)",
